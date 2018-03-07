@@ -45,7 +45,7 @@ aws_secret_access_key = <your secret_access_key goes here>
 ```
  - and pass the profile name in argument (`default` if nothing):
 ```
-$> ./run.sh -p my_profile_name
+$> ./s3-acl-viewer -p my_profile_name
 ```
 
 ### Configure the Google Spreadsheet report
@@ -62,8 +62,8 @@ $> pip3 install -r requirement.txt
 
 ## Usage
 ```
-$> ./run.sh -h
-usage: run.py [-h] [--auth_host_name AUTH_HOST_NAME]
+$> ./s3-acl-viewer -h
+usage: s3-acl-viewer [-h] [--auth_host_name AUTH_HOST_NAME]
               [--noauth_local_webserver]
               [--auth_host_port [AUTH_HOST_PORT [AUTH_HOST_PORT ...]]]
               [--logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
@@ -94,7 +94,7 @@ optional arguments:
 ## Example
 
 ```
-$> ./run.sh -p my_profile_1 my_profile_2 -xgc
+$> ./s3-acl-viewer -p my_profile_1 my_profile_2 -xgc
 ```
 
 ### Output
