@@ -26,7 +26,7 @@ Report AWS S3's permissions to CSV, Excel and Google Spreadsheet.
    - **Copy the credentials**
      - **Access key ID**
      - **Secret access key**
- - **Create ~/.aws/credentials file or paste the credentials in when you run the script**
+ - **Create ~/.aws/credentials file**
    - Put the credentials you copied in the previous step here in this format:
 ```
 [default]
