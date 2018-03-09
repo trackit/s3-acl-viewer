@@ -57,7 +57,7 @@ Follow the first step of the instructions at https://developers.google.com/sheet
 ```
 $> git clone git@github.com:trackit/s3-acl-viewer.git
 $> cd s3-acl-viewer
-$> pip3 install -r requirement.txt
+$> pip3 install -r requirements.txt
 ```
 
 ## Usage
