@@ -24,4 +24,3 @@ def build(name, buckets):
         for bucket in buckets:
             for policies in bucket.policy:
                 writer.writerow(policies)
-                print(policies)

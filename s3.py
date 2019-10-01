@@ -70,26 +70,12 @@ class Bucket:
 
 def get_format_principal(policy):
     for statement in policy["Statement"]:
-        try:
-            statement["Principal"]["AWS"] = statement["Principal"]["AWS"] \
-                if type(statement["Principal"]["AWS"]) is str else ', '.join(statement["Principal"]["AWS"])
-        except KeyError:
-            try:
-                statement["Principal"]["Service"] = statement["Principal"]["Service"] \
-                    if type(statement["Principal"]["Service"]) is str else ', '.join(statement["Principal"]["Service"])
-            except KeyError:
-                try:
-                    statement["Principal"]["CanonicalUser"] = statement["Principal"]["CanonicalUser"] \
-                        if type(statement["Principal"]["CanonicalUser"]) is str \
-                        else ', '.join(statement["Principal"]["CanonicalUser"])
-                except KeyError:
-                    try:
-                        statement["Principal"]["Federated"] = statement["Principal"]["Federated"] \
-                            if type(statement["Principal"]["Federated"]) is str \
-                            else ', '.join(statement["Principal"]["Federated"])
-                    except KeyError:
-                        pass
+        for principal_type in statement["Principal"]:
+            statement["Principal"][principal_type] = statement["Principal"][principal_type] \
+                if type(statement["Principal"][principal_type]) is str \
+                else ', '.join(statement["Principal"][principal_type])
     return statement["Principal"]
+
 
 def get_format_policy(json_policy):
     policy = json.loads(json_policy)
@@ -103,7 +89,6 @@ def get_format_policy(json_policy):
             "Resources": statement["Resource"]
         }
         format_policies.append(format_policy)
-    #print("FORMAT_POLICY ==", format_policy)
     return format_policies
 
 

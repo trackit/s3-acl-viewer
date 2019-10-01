@@ -1,5 +1,4 @@
 import xlsxwriter
-import string
 
 def write_header(workbook, worksheet):
     header_format = workbook.add_format()
@@ -100,32 +99,21 @@ def format_sheet(worksheet, workbook, line):
         "format":   red,
     })
 
+
 def write_right_principal(worksheet, policies, data_format, i, color_format):
-    try:
-        worksheet.write("F" + str(i), policies["Principal"]["AWS"], data_format)
-        worksheet.write("F" + str(i + 1), "/", color_format)
-        worksheet.write("F" + str(i + 2), "/", data_format)
-        worksheet.write("F" + str(i + 3), "/", color_format)
-    except KeyError:
-        try:
-            worksheet.write("F" + str(i + 1), policies["Principal"]["Service"], color_format)
-            worksheet.write("F" + str(i), "/", data_format)
-            worksheet.write("F" + str(i + 2), "/", data_format)
-            worksheet.write("F" + str(i + 3), "/", color_format)
-        except KeyError:
-            try:
-                worksheet.write("F" + str(i + 2), policies["Principal"]["CanonicalUser"], data_format)
-                worksheet.write("F" + str(i + 1), "/", color_format)
-                worksheet.write("F" + str(i), "/", data_format)
-                worksheet.write("F" + str(i + 3), "/", color_format)
-            except KeyError:
-                try:
-                    worksheet.write("F" + str(i + 3), policies["Principal"]["Federated"], color_format)
-                    worksheet.write("F" + str(i + 2), "/", data_format)
-                    worksheet.write("F" + str(i + 1), "/", color_format)
-                    worksheet.write("F" + str(i), "/", data_format)
-                except KeyError:
-                    worksheet.merge_range("F" + str(i) + ":F" + str(i + 3), "N/A")
+    worksheet.write("F" + str(i), "/", data_format)
+    worksheet.write("F" + str(i + 1), "/", color_format)
+    worksheet.write("F" + str(i + 2), "/", data_format)
+    worksheet.write("F" + str(i + 3), "/", color_format)
+    func_table = {
+        "AWS": (data_format, i),
+        "Service": (color_format, i + 1),
+        "CanonicalUser": (data_format, i + 2),
+        "Federated": (color_format, i + 3),
+    }
+    for principal_type in policies["Principal"]:
+        format_type, line = func_table[principal_type]
+        worksheet.write("F" + str(line), policies["Principal"][principal_type], format_type)
 
 
 def get_format(workbook):
