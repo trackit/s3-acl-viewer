@@ -31,7 +31,6 @@ def main():
         for profile in args.profile
         for bucket in s3.fetch_profile(profile)
     ]
-
     c_threads = []
     if args.csv:
         c_threads += [threading.Thread(target=build_csv.build, args=(args.name, buckets))]

@@ -15,4 +15,13 @@ def build(name, buckets):
         writer.writeheader()
         for bucket in buckets:
             writer.writerow(bucket.dump_csv())
-        
+    with open("{}.csv".format(name + "_policy"), "w", newline="") as csvfile:
+        fieldnames = [
+            "Principal", "Action", "Effect", "Resources",
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for bucket in buckets:
+            for policies in bucket.policy:
+                writer.writerow(policies)
+                print(policies)

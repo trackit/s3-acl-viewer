@@ -2,6 +2,7 @@ import boto3
 import json
 import datetime
 import threading
+import botocore.exceptions
 from collections import defaultdict
 
 GROUPS_TO_CHECK = {
@@ -9,10 +10,12 @@ GROUPS_TO_CHECK = {
     "http://acs.amazonaws.com/groups/global/AuthenticatedUsers": "Authenticated AWS users"
 }
 
+
 class Bucket:
     tr_yn = lambda x: "Y" if x else "N"
 
     def __init__(self, name, profile=None, creation_date=None):
+        self.policy = {}
         self.name = name
         self.creation_data = creation_date
         self.profile = profile
@@ -39,7 +42,8 @@ class Bucket:
             '(Authenticated AWS users) Read': Bucket.tr_yn(self.permission["Authenticated AWS users"]["READ"]),
             '(Authenticated AWS users) Write': Bucket.tr_yn(self.permission["Authenticated AWS users"]["WRITE"]),
             '(Authenticated AWS users) Read ACL': Bucket.tr_yn(self.permission["Authenticated AWS users"]["READ_ACP"]),
-            '(Authenticated AWS users) Write ACL': Bucket.tr_yn(self.permission["Authenticated AWS users"]["WRITE_ACP"]),
+            '(Authenticated AWS users) Write ACL': Bucket.tr_yn(
+                self.permission["Authenticated AWS users"]["WRITE_ACP"]),
             '(Authenticated AWS users) Full Control': Bucket.tr_yn(self.permission["Everyone"]["FULL_CONTROL"]),
         }
 
@@ -64,12 +68,56 @@ class Bucket:
         return self.dump_csv()
 
 
+def get_format_principal(policy):
+    for statement in policy["Statement"]:
+        try:
+            statement["Principal"]["AWS"] = statement["Principal"]["AWS"] \
+                if type(statement["Principal"]["AWS"]) is str else ', '.join(statement["Principal"]["AWS"])
+        except KeyError:
+            try:
+                statement["Principal"]["Service"] = statement["Principal"]["Service"] \
+                    if type(statement["Principal"]["Service"]) is str else ', '.join(statement["Principal"]["Service"])
+            except KeyError:
+                try:
+                    statement["Principal"]["CanonicalUser"] = statement["Principal"]["CanonicalUser"] \
+                        if type(statement["Principal"]["CanonicalUser"]) is str \
+                        else ', '.join(statement["Principal"]["CanonicalUser"])
+                except KeyError:
+                    try:
+                        statement["Principal"]["Federated"] = statement["Principal"]["Federated"] \
+                            if type(statement["Principal"]["Federated"]) is str \
+                            else ', '.join(statement["Principal"]["Federated"])
+                    except KeyError:
+                        pass
+    return statement["Principal"]
+
+def get_format_policy(json_policy):
+    policy = json.loads(json_policy)
+    format_policies = []
+    for statement in policy["Statement"]:
+        statement["Principal"] = get_format_principal(policy)
+        format_policy = {
+            "Principal": statement["Principal"],
+            "Action": statement["Action"],
+            "Effect": statement["Effect"],
+            "Resources": statement["Resource"]
+        }
+        format_policies.append(format_policy)
+    #print("FORMAT_POLICY ==", format_policy)
+    return format_policies
+
+
 def fetch_acl(s3_client, bucket):
     acl = s3_client.get_bucket_acl(Bucket=bucket.name)
+    try:
+        policy = s3_client.get_bucket_policy(Bucket=bucket.name)
+        bucket.policy = get_format_policy(policy["Policy"])
+    except botocore.exceptions.ClientError:
+        pass
     for grant in acl["Grants"]:
         if "Grantee" in grant \
-            and "URI" in grant["Grantee"] \
-            and grant["Grantee"]["URI"] in GROUPS_TO_CHECK:
+                and "URI" in grant["Grantee"] \
+                and grant["Grantee"]["URI"] in GROUPS_TO_CHECK:
             bucket.add_perm(
                 GROUPS_TO_CHECK[grant["Grantee"]["URI"]],
                 grant["Permission"]
@@ -81,6 +129,7 @@ def fetch_buckets(s3_client):
         Bucket(bucket["Name"], bucket["CreationDate"])
         for bucket in s3_client.list_buckets()["Buckets"]
     ]
+
 
 def fetch_profile(profile):
     try:
@@ -103,4 +152,3 @@ def fetch_profile(profile):
         bucket.thread.join()
 
     return buckets
-
